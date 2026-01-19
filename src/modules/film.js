@@ -1,5 +1,6 @@
 import { InlineKeyboard } from 'grammy';
 import { getFilmByKpId } from '../services/films.service.js';
+import { safeReplyWithPoster } from '../utils/safeMessage.js';
 
 const countryFlags = {
   США: '🇺🇸',
@@ -26,11 +27,11 @@ export async function filmHandler(ctx, kpId) {
 
   const genres = (film.genres || []).join(', ');
 
-  const text = 
+  const text =
 `🎬 *${film.title}* (${film.year})
 
 ⭐ *Рейтинг:* ${film.rating || '—'}
-🎭 *Жанр:* ${genres || '—'}
+🎭 *Жанры:* ${genres || '—'}
 🌍 *Страны:* ${countries || '—'}
 
 📝 ${film.description || 'Описание отсутствует.'}`;
@@ -39,35 +40,10 @@ export async function filmHandler(ctx, kpId) {
     .url('▶️ Смотреть', film.url || 'https://t.me')
     .row()
     .text('⬅️ Назад', 'catalog')
-    .text('🏠 В меню', 'home');
+    .text('🏠 На главную', 'home');
 
-  try {
-    // ⚡ безопасно удаляем предыдущее сообщение
-    if (ctx.callbackQuery?.message?.message_id) {
-      await ctx.api.deleteMessage(
-        ctx.callbackQuery.message.chat.id,
-        ctx.callbackQuery.message.message_id
-      );
-    }
-
-    // 📸 отправляем карточку
-    if (film.poster) {
-      await ctx.replyWithPhoto(film.poster, {
-        caption: text,
-        parse_mode: 'Markdown',
-        reply_markup: keyboard,
-      });
-    } else {
-      await ctx.reply(text, {
-        parse_mode: 'Markdown',
-        reply_markup: keyboard,
-      });
-    }
-  } catch (err) {
-    console.error('BOT ERROR:', err);
-    await ctx.reply(text, {
-      parse_mode: 'Markdown',
-      reply_markup: keyboard,
-    });
-  }
+  await safeReplyWithPoster(ctx, film.poster, text, {
+    parse_mode: 'Markdown',
+    reply_markup: keyboard,
+  });
 }
