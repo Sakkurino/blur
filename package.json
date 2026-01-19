@@ -1,0 +1,17 @@
+{
+  "name": "blur",
+  "version": "1.0.0",
+  "description": "Telegram cinema bot",
+  "type": "module",
+  "main": "src/bot.js",
+  "scripts": {
+    "start": "node src/bot.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "grammy": "^1.39.3"
+  }
+}
