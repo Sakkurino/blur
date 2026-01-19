@@ -1,6 +1,5 @@
 import { InlineKeyboard } from 'grammy';
 import { getFilmByKpId } from '../services/films.service.js';
-import { safeReplyWithPoster } from '../utils/safeMessage.js';
 
 const countryFlags = {
   США: '🇺🇸',
@@ -31,7 +30,7 @@ export async function filmHandler(ctx, kpId) {
 `🎬 *${film.title}* (${film.year})
 
 ⭐ *Рейтинг:* ${film.rating || '—'}
-🎭 *Жанры:* ${genres || '—'}
+🎭 *Жанр:* ${genres || '—'}
 🌍 *Страны:* ${countries || '—'}
 
 📝 ${film.description || 'Описание отсутствует.'}`;
@@ -42,8 +41,30 @@ export async function filmHandler(ctx, kpId) {
     .text('⬅️ Назад', 'catalog')
     .text('🏠 На главную', 'home');
 
-  await safeReplyWithPoster(ctx, film.poster, text, {
-    parse_mode: 'Markdown',
-    reply_markup: keyboard,
-  });
+  try {
+    const message = ctx.callbackQuery?.message;
+
+    if (message) {
+      await ctx.api.deleteMessage(message.chat.id, message.message_id);
+    }
+
+    if (film.poster) {
+      await ctx.replyWithPhoto(film.poster, {
+        caption: text,
+        parse_mode: 'Markdown',
+        reply_markup: keyboard,
+      });
+    } else {
+      await ctx.reply(text, {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard,
+      });
+    }
+  } catch (err) {
+    console.error('FILM ERROR:', err);
+    await ctx.reply(text, {
+      parse_mode: 'Markdown',
+      reply_markup: keyboard,
+    });
+  }
 }

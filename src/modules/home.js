@@ -1,5 +1,4 @@
 import { InlineKeyboard } from 'grammy';
-import { safeEditOrReply } from '../utils/safeMessage.js';
 
 export async function homeHandler(ctx) {
   const keyboard = new InlineKeyboard()
@@ -10,8 +9,29 @@ export async function homeHandler(ctx) {
 
   const text = '🎬 *blur* — онлайн-кинотеатр в Telegram.';
 
-  await safeEditOrReply(ctx, text, {
-    parse_mode: 'Markdown',
-    reply_markup: keyboard,
-  });
+  try {
+    const message = ctx.callbackQuery?.message;
+
+    // если сообщение текстовое — редактируем
+    if (message?.text) {
+      await ctx.editMessageText(text, {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard,
+      });
+    }
+    // если было медиа — удаляем и шлём новое
+    else if (message) {
+      await ctx.api.deleteMessage(message.chat.id, message.message_id);
+      await ctx.reply(text, {
+        parse_mode: 'Markdown',
+        reply_markup: keyboard,
+      });
+    }
+  } catch (err) {
+    console.error('HOME ERROR:', err);
+    await ctx.reply(text, {
+      parse_mode: 'Markdown',
+      reply_markup: keyboard,
+    });
+  }
 }
